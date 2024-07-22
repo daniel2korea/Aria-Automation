@@ -1,0 +1,60 @@
+formatVersion: 1
+inputs:
+  name_:
+    type: string
+    title: VM 이름
+  zoneId_:
+    type: string
+    title: 클라우드 지역
+  computeTag_:
+    type: string
+    title: 호스트 지역
+  image_:
+    type: string
+    title: VM image
+  flavor_:
+    type: string
+    title: VM 성능
+  networkTag_:
+    type: string
+    title: 네트워크
+  ipAddress_:
+    type: string
+    title: IP 주소
+    default: ""
+  domain_fullname:
+    type: string
+    title: 도메인네임 FULL입력
+resources:
+  service_net:
+    type: Cloud.vSphere.Network
+    properties:
+      constraints:
+        - tag: ${input.networkTag_}
+  vm:
+    type: Cloud.vSphere.Machine
+    properties:
+      name: ${input.name_}
+      image: ${input.image_}
+      flavor: ${input.flavor_}
+      ovfProperties:
+        - key: network.dns
+          value: 172.20.10.8
+        - key: network.domain
+          value: ${input.domain_fullname}.sddc.lab
+        - key: network.gateway
+          value: ${resource.service_net.gateway}
+        - key: network.ip0
+          value: ${input.ipAddress_}/24
+        - key: network.searchpath
+          value: ${resource.service_net.domain}
+        - key: user-data
+          value: ""
+        - key: va-ssh-public-key
+          value: ""
+      constraints:
+        - tag: ${input.computeTag_}
+      networks:
+        - network: ${resource.service_net.id}
+          assignment: static
+          address: ${input.ipAddress_}
